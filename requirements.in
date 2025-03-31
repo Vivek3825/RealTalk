@@ -1,0 +1,15 @@
+vosk
+SpeechRecognition
+pyaudio
+numpy
+scipy
+transformers
+sentencepiece
+indic-nlp-library
+torch
+gtts
+pyttsx3
+sounddevice
+fastapi
+uvicorn
+python-dotenv

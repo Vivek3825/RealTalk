@@ -1,0 +1,51 @@
+#Virtual Environments
+venv/
+.venv/
+realtalk_env/
+env/
+*.env
+#Byte-compiled / optimized / DLL files
+pycache/
+*.py[cod]
+*$py.class
+#Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+#IDE and Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+#Jupyter Notebook
+.ipynb_checkpoints/
+Model and Large Binary Files
+*.h5
+*.pyd
+*.dll
+*.so
+*.dylib
+*.pkl
+*.joblib
+#Logs and Databases
+*.log
+*.sqlite3
+#OS generated files
+.DS_Store
+Thumbs.db
+#Environments and Secrets
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+#Specific to Machine Learning Projects
+*.model
+*.pt
+*.pth
+*.onnx
+models/
