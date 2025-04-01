@@ -119,7 +119,7 @@ class SpeechRecognizer:
             
             # ENHANCEMENT 1: Smarter adaptive thresholding using standard deviation
             speech_threshold = avg_noise + (std_noise * 2.0)
-            speech_threshold = max(speech_threshold, 300)  # Minimum threshold, #type: ignore
+            speech_threshold = max(speech_threshold, 300)  # type: ignore # Minimum threshold
             
             # Clean up resources
             stream.stop_stream()
@@ -154,7 +154,7 @@ class SpeechRecognizer:
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
         
         # Apply a simple low-pass filter to reduce high-frequency noise
-        b, a = signal.butter(3, 0.05)  #type: ignore
+        b, a = signal.butter(3, 0.05) # type: ignore
         filtered_audio = signal.lfilter(b, a, audio_array)
         
         # ENHANCEMENT 3: Apply spectral subtraction if noise profile exists
@@ -169,13 +169,19 @@ class SpeechRecognizer:
             normalized_audio = filtered_audio
         
         # Convert back to int16
-        processed_audio = np.int16(normalized_audio)  #type: ignore
+        processed_audio = np.int16(normalized_audio) # type: ignore
         
         # Convert back to bytes
         return processed_audio.tobytes()
 
     def recognize_from_mic(self):
-        """Capture and recognize speech with enhanced voice activity detection."""
+        """
+        Listen for speech and return the recognized text
+        
+        Returns:
+            str: The recognized text, or None if nothing was recognized
+        """
+        # Create a new stream each time - don't reuse the old one
         stream = self.audio.open(format=pyaudio.paInt16, channels=1,
                                 rate=16000, input=True, frames_per_buffer=4096)
         stream.start_stream()
@@ -196,6 +202,8 @@ class SpeechRecognizer:
         speech_frames = 0
         adaptive_threshold = self.noise_level['speech_threshold']
         
+        final_text = None
+
         try:
             while True:
                 try:
@@ -246,8 +254,11 @@ class SpeechRecognizer:
                 if self.recognizer.AcceptWaveform(processed_data):
                     result = json.loads(self.recognizer.Result())
                     if result["text"]:
-                        print("\n" + Fore.GREEN + "✓ " + result["text"] + Style.RESET_ALL)
-                        last_partial = ""
+                        final_text = result["text"]
+                        print("\n" + Fore.GREEN + "✓ " + final_text + Style.RESET_ALL)
+                        
+                        # Once we have final text, stop listening and return it
+                        break  # This is the key change - break out of the loop when we have final text
                 else:
                     partial = json.loads(self.recognizer.PartialResult())
                     if partial["partial"] and partial["partial"] != last_partial:
@@ -259,9 +270,12 @@ class SpeechRecognizer:
         except Exception as e:
             print("\n" + Fore.RED + f"Error: {e}" + Style.RESET_ALL)
         finally:
+            # Only close the stream, don't terminate PyAudio
             stream.stop_stream()
             stream.close()
-            self.audio.terminate()
+        
+        print("Speech recognition stopped.")
+        return final_text
 
     def __del__(self):
         """Ensure resources are cleaned up when the object is deleted."""
@@ -276,7 +290,8 @@ if __name__ == "__main__":
         
         # Create recognizer with no language specified to trigger the selection menu
         sr = SpeechRecognizer()
-        sr.recognize_from_mic()
+        result = sr.recognize_from_mic()
+        print(f"Recognized text: {result}")
     except Exception as e:
         print(f"\n" + Fore.RED + f"Error: {e}" + Style.RESET_ALL)
         sys.exit(1)
